@@ -6,15 +6,16 @@ import java.util.LinkedList;
 import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.javatuples.Pair;
 
 public class shortestPath {
 
     public static void main(String[] args) {
-        /*
+
         // TODO: find way to grab the json over the internet through a command line arg
         JSONParser parser = new JSONParser();
 
-        String jsonLocation = "src/topology1.json";
+        String jsonLocation = "src/topology2.json";
 
         try {
             Object obj = parser.parse(new FileReader(jsonLocation));
@@ -24,7 +25,16 @@ public class shortestPath {
             long highestNumVertices = 0;
             for (Object o : edges) {
                 JSONArray edge = (JSONArray) o;
-                long sourceNode = (long) edge.get(0);
+                long sourceNode = 0;
+                // This try/catch block should account for hosts
+                // If the host IP addr can't be parsed into a long an error is thrown, and we know we have a string IP addr
+                // The way we handle it is set the val of sourceNode to highestNumVertices + 1 because hosts should
+                // be tracked as a vertex in the network graph
+                try {
+                    sourceNode = (long) edge.get(0);
+                } catch (Exception e) {
+                    sourceNode = highestNumVertices + 1;
+                }
                 if (sourceNode > highestNumVertices) {
                     highestNumVertices = sourceNode;
                 }
@@ -36,12 +46,58 @@ public class shortestPath {
             }
             // TODO: add nested try/catch block to parse IP addresses
             // TODO: couple given cannonical names with processing names
+            int processingNameIncrementer = 0;
             for (Object edge : edges) {
                 JSONArray node = (JSONArray) edge;
-                long switch_id = (long) node.get(0);
-                long dst_ip = (long) node.get(1);
+                Pair<String, Integer> sourceIpPair;
+                if (node.get(0) instanceof Long) {
+                    long source_ip = (long) node.get(0);
+                    int source_ip_int = 0;
+                    try {
+                        source_ip_int = (int) source_ip;
+                    } catch (Exception e) {
+                        source_ip_int = (int) (highestNumVertices + processingNameIncrementer);
+                    }
+                    sourceIpPair = Pair.with(String.valueOf(source_ip), source_ip_int);
+                } else {
+                    String source_ip = (String) node.get(0);
+                    int source_ip_int = 0;
+                    try {
+                        source_ip_int = Integer.parseInt(source_ip);
+                    } catch (Exception e) {
+                        source_ip_int = (int) (highestNumVertices + processingNameIncrementer);
+                    }
+                    sourceIpPair = Pair.with(String.valueOf(source_ip), source_ip_int);
+                }
+
+
+                Pair<String, Integer> dstIpPair;
+                if (node.get(1) instanceof Long) {
+                    long dst_ip = (long) node.get(1);
+                    int dst_ip_int = 0;
+                    try {
+                        dst_ip_int = (int) dst_ip;
+                    } catch (Exception e) {
+                        dst_ip_int = (int) (highestNumVertices + processingNameIncrementer);
+                    }
+                    dstIpPair = Pair.with(String.valueOf(dst_ip), dst_ip_int);
+                } else {
+                    String dst_ip = (String) node.get(1);
+                    int dst_ip_int = 0;
+                    try {
+                        dst_ip_int = Integer.parseInt(dst_ip);
+                    } catch (Exception e) {
+                        dst_ip_int = (int) (highestNumVertices + processingNameIncrementer);
+                    }
+                    dstIpPair = Pair.with(dst_ip, dst_ip_int);
+                }
+
+
                 long out_port = (long) node.get(2);
-                addEdge(graph, (int) switch_id - 1, (int) dst_ip - 1);
+
+                addEdge(graph, sourceIpPair.getValue1() - 1, dstIpPair.getValue1() - 1);
+
+                processingNameIncrementer += 1;
             }
             for (int i = 0; i < (int) highestNumVertices; i++) {
                 for (int j = 0; j < (int) highestNumVertices; j++) {
@@ -58,7 +114,7 @@ public class shortestPath {
         } catch (ParseException | IOException e) {
             e.printStackTrace();
         }
-        */
+        /*
         ArrayList<ArrayList<Integer>> graph = new ArrayList<ArrayList<Integer>>(9);
         for (int i = 0; i < 9; i++) {
             graph.add(new ArrayList<Integer>());
@@ -89,7 +145,7 @@ public class shortestPath {
                 }
             }
         }
-
+        */
 
     }
 
