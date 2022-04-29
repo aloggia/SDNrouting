@@ -18,7 +18,7 @@ public class shortestPath {
         // TODO: find way to grab the json over the internet through a command line arg
         JSONParser parser = new JSONParser();
 
-        String jsonLocation = "src/topology2.json";
+        String jsonLocation = "src/topology3.json";
 
         try {
             Object obj = parser.parse(new FileReader(jsonLocation));
@@ -133,7 +133,7 @@ public class shortestPath {
             for (int i = 0; i < (int) highestNumVertices; i++) {
                 for (int j = 0; j < (int) highestNumVertices; j++) {
                     if (i != j) {
-                        System.out.println("Shortest path from node " + i + " to node: " + j);
+                        System.out.println("Shortest path from node " + (i + 1) + " to node: " + (j + 1));
                         printShortestDist(graph, i, j, (int) highestNumVertices, portList);
                     }
                 }
@@ -217,18 +217,16 @@ public class shortestPath {
             Do something with allPorts.getValue2
          */
         for (Triplet<Integer, Integer, Integer> port : allPorts) {
-            if (port.getValue0().equals(path.get(path.size() - 1)) && port.getValue1().equals(path.get(path.size() - 2))) {
-                System.out.println("Shortest path from " + source + " to " + dest + " goes out port: " + port.getValue2());
+            if (port.getValue0().equals(path.get(path.size() - 1)) &&
+                    port.getValue1().equals(path.get(path.size() - 2)) &&
+                    port.getValue2() != -1) {
+                System.out.println("Shortest path from " + (source + 1) + " to " + (dest + 1) + " goes out port: " + port.getValue2());
             }
-            /*if (allPort.getValue0() == source && allPort.getValue1() == dest) {
-                // TODO: Do something with the port number
-                System.out.println("Shortest path from " + source + " to " + dest + " goes out port: " + allPort.getValue2());
-            }*/
         }
 
 
         for (int i = path.size() - 1; i >= 0; i--) {
-            System.out.print(path.get(i) + " ");
+            System.out.print((path.get(i) + 1) + " ");
         }
         System.out.println();
     }
