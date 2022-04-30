@@ -10,15 +10,18 @@ if __name__ == '__main__':
     file_name = "./" + website_endpoint + ".json"
     website = "http://www.goatgoose.com:2222/get_topology/" + website_endpoint
     r = requests.get(website)
-
-    with open(file_name, 'w') as file:
-        file.write(str(r.json()))
-    file.close()
-
-    with open(file_name, 'r') as file:
-        print(file.read())
-
-    file.close()
+    # R is the json object, we need to run the java program with json object
+    json_object = subprocess.check_output(['java', 'shortestPath', r])
+    # with open(file_name, 'w') as file:
+    #     file.write(str(r.json()))
+    # file.close()
+    #
+    # with open(file_name, 'r') as file:
+    #     print(file.read())
+    #
+    # file.close()
 
     # TODO: Need a way to get the created json from the java program and send it to the network
-    output = subprocess.check_output("java shortestPath " + file_name)
+    # output = subprocess.check_output("java shortestPath " + file_name)
+    send_address = "http://www.goatgoose.com:2222/set_tables/" + website_endpoint
+    requests.post(website, json=json_object)
