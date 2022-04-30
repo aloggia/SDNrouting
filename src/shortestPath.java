@@ -19,7 +19,6 @@ public class shortestPath {
         JSONParser parser = new JSONParser();
 
         String jsonLocation = args[1];
-
         try {
             Object obj = parser.parse(new FileReader(jsonLocation));
             JSONObject jsonObject = (JSONObject) obj;
