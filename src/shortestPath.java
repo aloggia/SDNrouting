@@ -18,7 +18,7 @@ public class shortestPath {
         // TODO: find way to grab the json over the internet through a command line arg
         JSONParser parser = new JSONParser();
 
-        String jsonLocation = "src/topology3.json";
+        String jsonLocation = args[1];
 
         try {
             Object obj = parser.parse(new FileReader(jsonLocation));
