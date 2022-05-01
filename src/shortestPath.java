@@ -1,15 +1,14 @@
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 
 import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
+import org.javatuples.Quintet;
 
 public class shortestPath {
 
@@ -18,16 +17,19 @@ public class shortestPath {
         // TODO: find way to grab the json over the internet through a command line arg
         JSONParser parser = new JSONParser();
 
-        String jsonLocation = args[1];
+        String jsonLocation = args[0];
+        //String jsonLocation = "topology1.json";
+        //File jsonLocation = new File("./topology1.json");
         try {
             Object obj = parser.parse(new FileReader(jsonLocation));
             JSONObject jsonObject = (JSONObject) obj;
             JSONArray edges = (JSONArray) jsonObject.get("connected");
 
-            /*
-            TODO: port list should be a triplet of Int source, int Destination, and Int Out port
-             */
-            ArrayList<Triplet<Integer, Integer, Integer>> portList = new ArrayList<Triplet<Integer, Integer, Integer>>();
+
+            //Port list is of the form (Canonical source device name, processing source device name,
+            //                          Canonical dest device name, processing dest device name, Port num)
+            ArrayList<Quintet<String, Integer, String, Integer, Integer>> portList = new ArrayList<Quintet<String,
+                    Integer, String, Integer, Integer>>();
 
             long highestNumVertices = 0;
             int srcNode = 0;
@@ -124,19 +126,40 @@ public class shortestPath {
                     dstNode = dstIpPair.getValue1();
                     //portList.add(Triplet.with(sourceIpPair.getValue0(), sourceIpPair.getValue1(), outPortInt));
                 }
-
-                portList.add(Triplet.with(sourceIpPair.getValue1(), dstIpPair.getValue1(), outPortInt));
+                // TODO: portList needs to read
+                //portList.add(Triplet.with(sourceIpPair.getValue1(), dstIpPair.getValue1(), outPortInt));
+                portList.add(Quintet.with(sourceIpPair.getValue0(), sourceIpPair.getValue1(),
+                        dstIpPair.getValue0(), dstIpPair.getValue1(), outPortInt));
                 addEdge(graph, sourceIpPair.getValue1(), dstIpPair.getValue1());
 
             }
-            for (int i = 0; i < (int) highestNumVertices; i++) {
+            /*for (int i = 0; i < (int) highestNumVertices; i++) {
                 for (int j = 0; j < (int) highestNumVertices; j++) {
                     if (i != j) {
+                        *//*
+                        TODO: From what I understand printShortestDistance needs to be moified to return a JSONObject
+                        holding the routing info for the specific node passed in
+                        TODO: IDEA: print shortest dist will return a list/array for the shortest path from x to y
+                        We also have a function construct routing table that will run print shortest dist for each node
+                        in the topology
+                        then we can have construct routing table return the JSONObject containing all the routing info
+                        for the node passed in
+                         *//*
                         System.out.println("Shortest path from node " + (i + 1) + " to node: " + (j + 1));
-                        printShortestDist(graph, i, j, (int) highestNumVertices, portList);
+                        shortestDist(graph, i, j, (int) highestNumVertices, portList);
                     }
                 }
-            }
+            }*/
+            System.out.println("routing for");
+            // TODO: do you need to create routing tables for switches not on the shortest path between any hosts
+            shortestDist(graph, 12, 11, (int) highestNumVertices, portList);
+            shortestDist(graph, 11, 12, (int) highestNumVertices, portList);
+            shortestDist(graph, 12, 10, (int) highestNumVertices, portList);
+            shortestDist(graph, 10, 12, (int) highestNumVertices, portList); // This one prints port
+            shortestDist(graph, 11, 10, (int) highestNumVertices, portList);
+            shortestDist(graph, 10, 11, (int) highestNumVertices, portList); // THis on prints port
+
+            //constructRoutingTable(graph, )
             // TODO: Put the output data into routing tables
             // TODO: Send the routing tables out over the internet to the test network
 
@@ -179,13 +202,31 @@ public class shortestPath {
 
     }
 
+    /*private static JSONObject constructRoutingTable(ArrayList<ArrayList<Integer>> graph,
+                                                    int source,
+                                                    int sourceNode,
+                                                    int vertices,
+                                                    ArrayList<Triplet<Integer, Integer, Integer>> allPorts) {
+        // TODO: run printShortestDist for each node in the graph, and construct a JSONObject from that output
+        JSONObject routingTable = new JSONObject();
+        // return value from printShortestDist
+        Triplet<Integer, String, Integer> tableEntry;
+        for (int i = 0; i < vertices; ++i) {
+            tableEntry = shortestDist(graph, source, i, vertices, allPorts);
+            routingTable.pu
+        }
+
+
+        return routingTable;
+
+    }*/
     private static void addEdge(ArrayList<ArrayList<Integer>> graph, int source, int dest) {
         graph.get(source).add(dest);
         graph.get(dest).add(source);
     }
     // TODO: Need to return some data structure that can be translated to a routing entry
-    private static void printShortestDist(ArrayList<ArrayList<Integer>> graph, int source, int dest, int vertices,
-                                          ArrayList<Triplet<Integer, Integer, Integer>> allPorts) {
+    private static void shortestDist(ArrayList<ArrayList<Integer>> graph, int source, int dest, int vertices,
+                                     ArrayList<Quintet<String, Integer, String, Integer, Integer>> allPorts) {
         // predecessor[i] array stores predecessor of
         // i and distance array stores distance of i
         // from s
@@ -211,15 +252,11 @@ public class shortestPath {
         //System.out.println("Shortest path length is: " + dist[dest]);
 
         // Print path
-        /* TODO: loop through allPorts
-            When we find an entry with allPorts.getValue0 == source && allPorts.getValue1 == dest
-            Do something with allPorts.getValue2
-         */
-        for (Triplet<Integer, Integer, Integer> port : allPorts) {
-            if (port.getValue0().equals(path.get(path.size() - 1)) &&
-                    port.getValue1().equals(path.get(path.size() - 2)) &&
-                    port.getValue2() != -1) {
-                System.out.println("Shortest path from " + (source + 1) + " to " + (dest + 1) + " goes out port: " + port.getValue2());
+        for (Quintet<String, Integer, String, Integer, Integer> port : allPorts) {
+            if (port.getValue1() == (path.get(path.size() - 1)) &&
+                    port.getValue3() == (path.get(path.size() - 2)) &&
+                    port.getValue4() != -1) {
+                System.out.println("Shortest path from " + port.getValue0() + " to " + port.getValue2() + " goes out port: " + port.getValue4());
             }
         }
 
