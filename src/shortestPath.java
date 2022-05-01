@@ -302,7 +302,12 @@ public class shortestPath {
 
         // TODO: The number of ports a datagram will go through = path length - 2
         for (int i = path.size() - 2; i >= 0; i--) {
-
+            for (Quintet<String, Integer, String, Integer, Integer> connection : allPorts) {
+                if (path.get(i + 1) == connection.getValue1() && path.get(i) == connection.getValue3()) {
+                    // We have the edge between the 2 nodes we want
+                    System.out.println(connection.getValue4());
+                }
+            }
         }
     }
 
