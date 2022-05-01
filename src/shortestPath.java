@@ -233,6 +233,21 @@ public class shortestPath {
         int[] pred = new int[vertices];
         int[] dist = new int[vertices];
 
+        int outPort = 0;
+
+        String sourceAsString = "";
+        for (Quintet<String, Integer, String, Integer, Integer> possibleSource : allPorts) {
+            if (possibleSource.getValue1() == source) {
+                sourceAsString = possibleSource.getValue0();
+            }
+        }
+        String destAsString = "";
+        for (Quintet<String, Integer, String, Integer, Integer> possibleDest : allPorts) {
+            if (possibleDest.getValue1() == dest) {
+                destAsString = possibleDest.getValue0();
+            }
+        }
+
         if (!BFS(graph, source, dest, vertices, pred, dist)) {
             System.out.println("Given source and destination" +
                     "are not connected");
@@ -254,10 +269,29 @@ public class shortestPath {
         // Print path
         for (Quintet<String, Integer, String, Integer, Integer> port : allPorts) {
             if (port.getValue1() == (path.get(path.size() - 1)) &&
-                    port.getValue3() == (path.get(path.size() - 2)) &&
-                    port.getValue4() != -1) {
-                System.out.println("Shortest path from " + port.getValue0() + " to " + port.getValue2() + " goes out port: " + port.getValue4());
-            }
+                    port.getValue3() == (path.get(path.size() - 2))) {
+                if (port.getValue4() == -1) {
+                    // In this case we need to find the out port for the first switch connected to the host
+                    // This is the case of a host connected to a switch
+                    System.out.print("Shortest path from " + sourceAsString + " to " + destAsString+ " goes out port: ");
+                   for (Quintet<String, Integer, String, Integer, Integer> firstHop : allPorts) {
+                        /*
+                        TODO: loop through allPorts, find the connection between the switch right after the host
+                        and the switch it's connected too, the first hop will be the port number from switch 1 ->
+                        switch 2
+                         */
+                       if (firstHop.getValue1() == path.get(path.size() - 2) &&
+                       firstHop.getValue3() == path.get(path.size() - 3)) {
+                           outPort = firstHop.getValue4();
+                           System.out.print(firstHop.getValue4() + "\n");
+                       }
+
+                    }
+                } else {
+                    outPort = port.getValue4();
+                    System.out.println("Shortest path from " + sourceAsString + " to " + destAsString + " goes out port: " + port.getValue4());
+                }
+                }
         }
 
 
@@ -265,6 +299,11 @@ public class shortestPath {
             System.out.print((path.get(i) + 1) + " ");
         }
         System.out.println();
+
+        // TODO: The number of ports a datagram will go through = path length - 2
+        for (int i = path.size() - 2; i >= 0; i--) {
+
+        }
     }
 
     private static boolean BFS(ArrayList<ArrayList<Integer>> graph, int source, int dest, int vertices,
