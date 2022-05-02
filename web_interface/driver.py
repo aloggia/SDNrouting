@@ -4,7 +4,7 @@ import subprocess
 
 if __name__ == '__main__':
     # website_endpoint = str(sys.argv[1])
-    website_endpoint = "topology1"
+    website_endpoint = "topology2"
     file_name = "./" + website_endpoint + ".json"
     website = "http://www.goatgoose.com:2222/get_topology/" + website_endpoint
     r = requests.get(website)

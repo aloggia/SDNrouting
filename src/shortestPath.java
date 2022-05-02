@@ -305,10 +305,11 @@ public class shortestPath {
             for (Quintet<String, Integer, String, Integer, Integer> connection : allPorts) {
                 if (path.get(i + 1) == connection.getValue1() && path.get(i) == connection.getValue3()) {
                     // We have the edge between the 2 nodes we want
-                    System.out.println(connection.getValue4());
+                    System.out.print(connection.getValue4() + " ");
                 }
             }
         }
+        System.out.print("\n");
     }
 
     private static boolean BFS(ArrayList<ArrayList<Integer>> graph, int source, int dest, int vertices,
