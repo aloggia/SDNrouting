@@ -50,7 +50,7 @@ public class shortestPath {
                     highestNumVertices = sourceNode;
                 }
             }
-            highestNumVertices -= 1;
+            //highestNumVertices -= 1;
             // We can do this because we know there are 3 hosts on the network
             highestNumVertices += 3;
 
@@ -58,7 +58,6 @@ public class shortestPath {
             for (int i = 0; i < (int) highestNumVertices; i++) {
                 graph.add(new ArrayList<Integer>());
             }
-            // TODO: couple given cannonical names with processing names
             for (Object edge : edges) {
                 JSONArray node = (JSONArray) edge;
                 // Pair is in form (Cannonical name, Processing name)
@@ -151,13 +150,15 @@ public class shortestPath {
                 }
             }*/
             System.out.println("routing for");
-            // TODO: do you need to create routing tables for switches not on the shortest path between any hosts
-            shortestDist(graph, 12, 11, (int) highestNumVertices, portList);
-            shortestDist(graph, 11, 12, (int) highestNumVertices, portList);
-            shortestDist(graph, 12, 10, (int) highestNumVertices, portList);
-            shortestDist(graph, 10, 12, (int) highestNumVertices, portList); // This one prints port
-            shortestDist(graph, 11, 10, (int) highestNumVertices, portList);
-            shortestDist(graph, 10, 11, (int) highestNumVertices, portList); // THis on prints port
+            // TODO: Need to figure out a way to dynamically link hosts through a shortest path depending on the topology
+            // TODO: Turn the array list returned by shortestDist into entries into routingTable
+            ArrayList<Triplet<Integer, String, Integer>> routingTable = new ArrayList<Triplet<Integer, String, Integer>>();
+            routingTable.addAll(shortestDist(graph, 13, 12, (int) highestNumVertices, portList));
+            routingTable.addAll(shortestDist(graph, 12, 13, (int) highestNumVertices, portList));
+            routingTable.addAll(shortestDist(graph, 13, 14, (int) highestNumVertices, portList));
+            routingTable.addAll(shortestDist(graph, 14, 13, (int) highestNumVertices, portList)); // This one prints port
+            routingTable.addAll(shortestDist(graph, 12, 14, (int) highestNumVertices, portList));
+            routingTable.addAll(shortestDist(graph, 14, 12, (int) highestNumVertices, portList)); // THis on prints port
 
             //constructRoutingTable(graph, )
             // TODO: Put the output data into routing tables
@@ -202,30 +203,12 @@ public class shortestPath {
 
     }
 
-    /*private static JSONObject constructRoutingTable(ArrayList<ArrayList<Integer>> graph,
-                                                    int source,
-                                                    int sourceNode,
-                                                    int vertices,
-                                                    ArrayList<Triplet<Integer, Integer, Integer>> allPorts) {
-        // TODO: run printShortestDist for each node in the graph, and construct a JSONObject from that output
-        JSONObject routingTable = new JSONObject();
-        // return value from printShortestDist
-        Triplet<Integer, String, Integer> tableEntry;
-        for (int i = 0; i < vertices; ++i) {
-            tableEntry = shortestDist(graph, source, i, vertices, allPorts);
-            routingTable.pu
-        }
-
-
-        return routingTable;
-
-    }*/
     private static void addEdge(ArrayList<ArrayList<Integer>> graph, int source, int dest) {
         graph.get(source).add(dest);
         graph.get(dest).add(source);
     }
     // TODO: Need to return some data structure that can be translated to a routing entry
-    private static void shortestDist(ArrayList<ArrayList<Integer>> graph, int source, int dest, int vertices,
+    private static ArrayList<Triplet<Integer, String, Integer>> shortestDist(ArrayList<ArrayList<Integer>> graph, int source, int dest, int vertices,
                                      ArrayList<Quintet<String, Integer, String, Integer, Integer>> allPorts) {
         // predecessor[i] array stores predecessor of
         // i and distance array stores distance of i
@@ -234,6 +217,7 @@ public class shortestPath {
         int[] dist = new int[vertices];
 
         int outPort = 0;
+        ArrayList<Triplet<Integer, String, Integer>> routingTuples = new ArrayList<Triplet<Integer, String, Integer>>();
 
         String sourceAsString = "";
         for (Quintet<String, Integer, String, Integer, Integer> possibleSource : allPorts) {
@@ -251,7 +235,8 @@ public class shortestPath {
         if (!BFS(graph, source, dest, vertices, pred, dist)) {
             System.out.println("Given source and destination" +
                     "are not connected");
-            return;
+            ArrayList<Triplet<Integer, String, Integer>> nullConnection = new ArrayList<Triplet<Integer, String, Integer>>();
+            return nullConnection;
         }
 
         // LinkedList to store path
@@ -275,11 +260,6 @@ public class shortestPath {
                     // This is the case of a host connected to a switch
                     System.out.print("Shortest path from " + sourceAsString + " to " + destAsString+ " goes out port: ");
                    for (Quintet<String, Integer, String, Integer, Integer> firstHop : allPorts) {
-                        /*
-                        TODO: loop through allPorts, find the connection between the switch right after the host
-                        and the switch it's connected too, the first hop will be the port number from switch 1 ->
-                        switch 2
-                         */
                        if (firstHop.getValue1() == path.get(path.size() - 2) &&
                        firstHop.getValue3() == path.get(path.size() - 3)) {
                            outPort = firstHop.getValue4();
@@ -291,7 +271,7 @@ public class shortestPath {
                     outPort = port.getValue4();
                     System.out.println("Shortest path from " + sourceAsString + " to " + destAsString + " goes out port: " + port.getValue4());
                 }
-                }
+            }
         }
 
 
@@ -305,11 +285,20 @@ public class shortestPath {
             for (Quintet<String, Integer, String, Integer, Integer> connection : allPorts) {
                 if (path.get(i + 1) == connection.getValue1() && path.get(i) == connection.getValue3()) {
                     // We have the edge between the 2 nodes we want
-                    System.out.print(connection.getValue4() + " ");
+                    if (connection.getValue4() != -1) {
+                        System.out.print(connection.getValue0() + " ");
+                        System.out.print(destAsString + " ");
+                        System.out.print(connection.getValue4() + " ");
+                        System.out.print("\n");
+                        routingTuples.add(Triplet.with(Integer.parseInt(connection.getValue0()),
+                                destAsString,
+                                connection.getValue4()));
+                    }
                 }
             }
         }
         System.out.print("\n");
+        return routingTuples;
     }
 
     private static boolean BFS(ArrayList<ArrayList<Integer>> graph, int source, int dest, int vertices,
