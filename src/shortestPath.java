@@ -1,4 +1,5 @@
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -14,7 +15,6 @@ public class shortestPath {
 
     public static void main(String[] args) {
 
-        // TODO: find way to grab the json over the internet through a command line arg
         JSONParser parser = new JSONParser();
 
         String jsonLocation = args[0];
@@ -60,7 +60,7 @@ public class shortestPath {
             }
             for (Object edge : edges) {
                 JSONArray node = (JSONArray) edge;
-                // Pair is in form (Cannonical name, Processing name)
+                // Pair is in form (Canonical name, Processing name)
                 // Process source node
                 Pair<String, Integer> sourceIpPair;
                 long outPortLong = (long) node.get(2);
@@ -125,30 +125,14 @@ public class shortestPath {
                     dstNode = dstIpPair.getValue1();
                     //portList.add(Triplet.with(sourceIpPair.getValue0(), sourceIpPair.getValue1(), outPortInt));
                 }
-                // TODO: portList needs to read
+
                 //portList.add(Triplet.with(sourceIpPair.getValue1(), dstIpPair.getValue1(), outPortInt));
                 portList.add(Quintet.with(sourceIpPair.getValue0(), sourceIpPair.getValue1(),
                         dstIpPair.getValue0(), dstIpPair.getValue1(), outPortInt));
                 addEdge(graph, sourceIpPair.getValue1(), dstIpPair.getValue1());
 
             }
-            /*for (int i = 0; i < (int) highestNumVertices; i++) {
-                for (int j = 0; j < (int) highestNumVertices; j++) {
-                    if (i != j) {
-                        *//*
-                        TODO: From what I understand printShortestDistance needs to be moified to return a JSONObject
-                        holding the routing info for the specific node passed in
-                        TODO: IDEA: print shortest dist will return a list/array for the shortest path from x to y
-                        We also have a function construct routing table that will run print shortest dist for each node
-                        in the topology
-                        then we can have construct routing table return the JSONObject containing all the routing info
-                        for the node passed in
-                         *//*
-                        System.out.println("Shortest path from node " + (i + 1) + " to node: " + (j + 1));
-                        shortestDist(graph, i, j, (int) highestNumVertices, portList);
-                    }
-                }
-            }*/
+
             System.out.println("routing for");
             // TODO: Need to figure out a way to dynamically link hosts through a shortest path depending on the topology
             // TODO: Turn the array list returned by shortestDist into entries into routingTable
@@ -160,9 +144,30 @@ public class shortestPath {
             routingTable.addAll(shortestDist(graph, 12, 14, (int) highestNumVertices, portList));
             routingTable.addAll(shortestDist(graph, 14, 12, (int) highestNumVertices, portList)); // THis on prints port
 
-            //constructRoutingTable(graph, )
             // TODO: Put the output data into routing tables
-            // TODO: Send the routing tables out over the internet to the test network
+            // TODO: Save the created json routing table so it can be sent by the python program
+            JSONObject jsonRoutingTable = new JSONObject();
+            //jsonRoutingTable.put("title", "Forwarding Tables Schema");
+            JSONArray tableEntries = new JSONArray();
+            // TODO: for each element in routingTable, turn that element into an object, with an integer, a string, and an integer
+            // TODO: once the element is turned into a correct object, push that object into tableEntries
+            for (Triplet<Integer, String, Integer> tableEntry : routingTable) {
+                JSONObject entry = new JSONObject();
+                entry.put("switch_id", tableEntry.getValue0());
+                entry.put("dst_ip", tableEntry.getValue1());
+                entry.put("out_port", tableEntry.getValue2());
+                tableEntries.add(entry);
+            }
+            jsonRoutingTable.put("table_entries", tableEntries);
+
+            try {
+                //routingTable.addAll(
+                FileWriter fileWriter = new FileWriter("routingTable.json");
+                fileWriter.write(jsonRoutingTable.toJSONString());
+                fileWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
 
         } catch (ParseException | IOException e) {
@@ -207,7 +212,6 @@ public class shortestPath {
         graph.get(source).add(dest);
         graph.get(dest).add(source);
     }
-    // TODO: Need to return some data structure that can be translated to a routing entry
     private static ArrayList<Triplet<Integer, String, Integer>> shortestDist(ArrayList<ArrayList<Integer>> graph, int source, int dest, int vertices,
                                      ArrayList<Quintet<String, Integer, String, Integer, Integer>> allPorts) {
         // predecessor[i] array stores predecessor of
@@ -280,7 +284,7 @@ public class shortestPath {
         }
         System.out.println();
 
-        // TODO: The number of ports a datagram will go through = path length - 2
+        // The number of ports a datagram will go through = path length - 2
         for (int i = path.size() - 2; i >= 0; i--) {
             for (Quintet<String, Integer, String, Integer, Integer> connection : allPorts) {
                 if (path.get(i + 1) == connection.getValue1() && path.get(i) == connection.getValue3()) {
