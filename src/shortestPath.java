@@ -132,17 +132,30 @@ public class shortestPath {
                 addEdge(graph, sourceIpPair.getValue1(), dstIpPair.getValue1());
 
             }
-
+            int host_158 = 0;
+            int host_130 = 0;
+            int host_121 = 0;
+            for(Quintet<String, Integer, String, Integer, Integer> device : portList) {
+                if (device.getValue0().equals("169.254.20.158")) {
+                    host_158 = device.getValue1();
+                }
+                if (device.getValue0().equals("169.254.173.130")) {
+                    host_130 = device.getValue1();
+                }
+                if (device.getValue0().equals("169.254.240.121")) {
+                    host_121 = device.getValue1();
+                }
+            }
             System.out.println("routing for");
             // TODO: Need to figure out a way to dynamically link hosts through a shortest path depending on the topology
             // TODO: Turn the array list returned by shortestDist into entries into routingTable
             ArrayList<Triplet<Integer, String, Integer>> routingTable = new ArrayList<Triplet<Integer, String, Integer>>();
-            routingTable.addAll(shortestDist(graph, 13, 12, (int) highestNumVertices, portList));
-            routingTable.addAll(shortestDist(graph, 12, 13, (int) highestNumVertices, portList));
-            routingTable.addAll(shortestDist(graph, 13, 14, (int) highestNumVertices, portList));
-            routingTable.addAll(shortestDist(graph, 14, 13, (int) highestNumVertices, portList)); // This one prints port
-            routingTable.addAll(shortestDist(graph, 12, 14, (int) highestNumVertices, portList));
-            routingTable.addAll(shortestDist(graph, 14, 12, (int) highestNumVertices, portList)); // THis on prints port
+            routingTable.addAll(shortestDist(graph, host_158, host_130, (int) highestNumVertices, portList));
+            routingTable.addAll(shortestDist(graph, host_130, host_158, (int) highestNumVertices, portList));
+            routingTable.addAll(shortestDist(graph, host_158, host_121, (int) highestNumVertices, portList));
+            routingTable.addAll(shortestDist(graph, host_121, host_158, (int) highestNumVertices, portList)); // This one prints port
+            routingTable.addAll(shortestDist(graph, host_130, host_121, (int) highestNumVertices, portList));
+            routingTable.addAll(shortestDist(graph, host_121, host_130, (int) highestNumVertices, portList)); // THis on prints port
 
             // TODO: Put the output data into routing tables
             // TODO: Save the created json routing table so it can be sent by the python program
