@@ -30,6 +30,6 @@ if __name__ == '__main__':
     subprocess.run(['java', '-classpath', class_path, 'shortestPath', file_name])
 
     with open("routingTable.json", 'r') as send_file:
-        json_to_send = json.load(send_file)
+        json_to_send = json.dumps(json.load(send_file))
         site_results = requests.post(post_website, data=json_to_send)
         print(site_results.json())
