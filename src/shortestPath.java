@@ -113,13 +113,12 @@ public class shortestPath {
                     try {
                         dst_ip_int = Integer.parseInt(dst_ip);
                     } catch (Exception e) {
-                        if (dst_ip.equals("169.254.20.158")) {
-                            dst_ip_int = (int) (highestNumVertices);
-                        } else if (dst_ip.equals("169.254.173.130")) {
-                            dst_ip_int = (int) (highestNumVertices - 1);
-                        } else if (dst_ip.equals("169.254.240.121")) {
-                            dst_ip_int = (int) (highestNumVertices - 2);
-                        }
+                        dst_ip_int = switch (dst_ip) {
+                            case "169.254.20.158" -> (int) (highestNumVertices);
+                            case "169.254.173.130" -> (int) (highestNumVertices - 1);
+                            case "169.254.240.121" -> (int) (highestNumVertices - 2);
+                            default -> dst_ip_int;
+                        };
                     }
                     dstIpPair = Pair.with(dst_ip, dst_ip_int - 1);
                     dstNode = dstIpPair.getValue1();
@@ -147,8 +146,8 @@ public class shortestPath {
                 }
             }
             System.out.println("routing for");
-            // TODO: Need to figure out a way to dynamically link hosts through a shortest path depending on the topology
-            // TODO: Turn the array list returned by shortestDist into entries into routingTable
+            // dynamically linked hosts through a shortest path depending on the topology
+            // Array list returned by shortestDist is collected and added to routingTable
             ArrayList<Triplet<Integer, String, Integer>> routingTable = new ArrayList<Triplet<Integer, String, Integer>>();
             routingTable.addAll(shortestDist(graph, host_158, host_130, (int) highestNumVertices, portList));
             routingTable.addAll(shortestDist(graph, host_130, host_158, (int) highestNumVertices, portList));
@@ -157,13 +156,13 @@ public class shortestPath {
             routingTable.addAll(shortestDist(graph, host_130, host_121, (int) highestNumVertices, portList));
             routingTable.addAll(shortestDist(graph, host_121, host_130, (int) highestNumVertices, portList)); // THis on prints port
 
-            // TODO: Put the output data into routing tables
-            // TODO: Save the created json routing table so it can be sent by the python program
+            // Put the output data into routing tables
+            // ave the created json routing table so it can be sent by the python program
             JSONObject jsonRoutingTable = new JSONObject();
             //jsonRoutingTable.put("title", "Forwarding Tables Schema");
             JSONArray tableEntries = new JSONArray();
-            // TODO: for each element in routingTable, turn that element into an object, with an integer, a string, and an integer
-            // TODO: once the element is turned into a correct object, push that object into tableEntries
+            // For each element in routingTable, turn that element into an object, with an integer, a string, and an integer
+            // Once the element is turned into a correct object, push that object into tableEntries
             for (Triplet<Integer, String, Integer> tableEntry : routingTable) {
                 JSONObject entry = new JSONObject();
                 entry.put("switch_id", tableEntry.getValue0());
@@ -186,38 +185,6 @@ public class shortestPath {
         } catch (ParseException | IOException e) {
             e.printStackTrace();
         }
-        /*
-        ArrayList<ArrayList<Integer>> graph = new ArrayList<ArrayList<Integer>>(9);
-        for (int i = 0; i < 9; i++) {
-            graph.add(new ArrayList<Integer>());
-        }
-        addEdge(graph, 0, 1);
-        addEdge(graph, 0, 5);
-        addEdge(graph, 0, 3);
-        addEdge(graph, 1, 2);
-        addEdge(graph, 3, 5);
-        addEdge(graph, 3, 4);
-        addEdge(graph, 3, 2);
-        addEdge(graph, 5, 4);
-        addEdge(graph, 5, 7);
-        addEdge(graph, 2, 4);
-        addEdge(graph, 2, 6);
-        addEdge(graph, 2, 7);
-        addEdge(graph, 4, 6);
-        addEdge(graph, 4, 7);
-        addEdge(graph, 6, 7);
-        addEdge(graph, 4, 8);
-        addEdge(graph, 5, 8);
-        addEdge(graph, 6, 8);
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-                if (i != j) {
-                    System.out.println("Shortest path from node " + i + " to node: " + j);
-                    printShortestDist(graph, i, j, 9);
-                }
-            }
-        }
-        */
 
     }
 
@@ -252,8 +219,7 @@ public class shortestPath {
         if (!BFS(graph, source, dest, vertices, pred, dist)) {
             System.out.println("Given source and destination" +
                     "are not connected");
-            ArrayList<Triplet<Integer, String, Integer>> nullConnection = new ArrayList<Triplet<Integer, String, Integer>>();
-            return nullConnection;
+            return new ArrayList<Triplet<Integer, String, Integer>>();
         }
 
         // LinkedList to store path
