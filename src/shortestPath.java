@@ -11,16 +11,18 @@ import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import org.javatuples.Quintet;
 
+// Shortest path algorithm comes from: https://www.geeksforgeeks.org/shortest-path-unweighted-graph/
+// All other code besides the code to get the shortest path written by me
 public class shortestPath {
 
     public static void main(String[] args) {
 
         JSONParser parser = new JSONParser();
-
+        // Read in the topology file location as a command line arg
         String jsonLocation = args[0];
-        //String jsonLocation = "topology1.json";
-        //File jsonLocation = new File("./topology1.json");
+        // The pogram makes use of lots of nested try/catch blocks because of json values that can either be a number or a string
         try {
+            // Read in JSON object from file
             Object obj = parser.parse(new FileReader(jsonLocation));
             JSONObject jsonObject = (JSONObject) obj;
             JSONArray edges = (JSONArray) jsonObject.get("connected");
@@ -28,12 +30,19 @@ public class shortestPath {
 
             //Port list is of the form (Canonical source device name, processing source device name,
             //                          Canonical dest device name, processing dest device name, Port num)
+            /*
+            Because the program needs to use ints when working with the network graph, we need a way to connect the
+            cannonical names of hosts and switches to names usable by the program, that is what portList does
+             */
             ArrayList<Quintet<String, Integer, String, Integer, Integer>> portList = new ArrayList<Quintet<String,
                     Integer, String, Integer, Integer>>();
 
             long highestNumVertices = 0;
             int srcNode = 0;
             int dstNode = 0;
+            // Loop through every connection in the topology, if we find a switch with a new highest switch id,
+            // then set the number of vertices/devices to that value
+            // Some topologies are missing a switch, like topology2 not having a switch named 4. But this is not a problem
             for (Object o : edges) {
                 JSONArray edge = (JSONArray) o;
                 long sourceNode = 0;
@@ -50,21 +59,30 @@ public class shortestPath {
                     highestNumVertices = sourceNode;
                 }
             }
-            //highestNumVertices -= 1;
-            // We can do this because we know there are 3 hosts on the network
+            // We can and need to do this because we know there are 3 hosts on the network
             highestNumVertices += 3;
-
+            /*
+            The graph is represented by a list of lists, the outer list is all the vertices, and each vertex has a list
+            for all of it's connections
+             */
             ArrayList<ArrayList<Integer>> graph = new ArrayList<ArrayList<Integer>>((int) highestNumVertices);
             for (int i = 0; i < (int) highestNumVertices; i++) {
                 graph.add(new ArrayList<Integer>());
             }
             for (Object edge : edges) {
+                /*
+                Loop through all the edges in the graph
+                 */
                 JSONArray node = (JSONArray) edge;
                 // Pair is in form (Canonical name, Processing name)
                 // Process source node
                 Pair<String, Integer> sourceIpPair;
                 long outPortLong = (long) node.get(2);
                 int outPortInt = (int) outPortLong;
+                /*
+                If the source canonical name is a long, i.e a switch, we can trivially process that number into a program
+                readable int
+                 */
                 if (node.get(0) instanceof Long) {
                     long source_ip = (long) node.get(0);
                     int source_ip_int = 0;
@@ -74,28 +92,36 @@ public class shortestPath {
                         //source_ip_int = (int) (highestNumVertices + processingNameIncrementer);
                     }
                     sourceIpPair = Pair.with(String.valueOf(source_ip), source_ip_int - 1);
-                    //portList.add(Triplet.with(sourceIpPair.getValue0(), sourceIpPair.getValue1(), outPortInt));
                 } else {
+                    /*
+                    If the canonical name is an IP address, we need another way to process it
+                    We know that there are only 3 hosts on the network, so we can use a switch block to determine
+                    which host we are parsing.
+                    Then we can assign each host a different processing value. There is a chance that the processing value
+                    will be the same as the processing name for a switch. But the program looks at both canonical name
+                    and processing name, so there are no situations where the program interprets a switch as a host
+                     */
                     String source_ip = (String) node.get(0);
                     int source_ip_int = 0;
                     try {
                         source_ip_int = Integer.parseInt(source_ip);
                     } catch (Exception e) {
-                        if (source_ip.equals("169.254.20.158")) {
-                            source_ip_int = (int) (highestNumVertices);
-                        } else if (source_ip.equals("169.254.173.130")) {
-                            source_ip_int = (int) (highestNumVertices - 1);
-                        } else if (source_ip.equals("169.254.240.121")) {
-                            source_ip_int = (int) (highestNumVertices - 2);
-                        }
+                         source_ip_int = switch (source_ip) {
+                             case "169.254.20.158" -> (int) (highestNumVertices);
+                             case "169.254.173.130" -> (int) (highestNumVertices - 1);
+                             case "169.254.240.121" -> (int) (highestNumVertices - 2);
+                             default -> source_ip_int;
+                         };
                     }
                     sourceIpPair = Pair.with(String.valueOf(source_ip), source_ip_int - 1);
                     srcNode = sourceIpPair.getValue1();
-                    //portList.add(Triplet.with(sourceIpPair.getValue0(), sourceIpPair.getValue1(), outPortInt));
                 }
 
                 // Pair is in form (Cannonical Name, processing name)
                 //process dst node
+                /*
+                Now do the same thing we did for the edge's source, but for the destination
+                 */
                 Pair<String, Integer> dstIpPair;
                 if (node.get(1) instanceof Long) {
                     long dst_ip = (long) node.get(1);
@@ -113,6 +139,7 @@ public class shortestPath {
                     try {
                         dst_ip_int = Integer.parseInt(dst_ip);
                     } catch (Exception e) {
+                        // Same as for source, but for destination
                         dst_ip_int = switch (dst_ip) {
                             case "169.254.20.158" -> (int) (highestNumVertices);
                             case "169.254.173.130" -> (int) (highestNumVertices - 1);
@@ -122,15 +149,17 @@ public class shortestPath {
                     }
                     dstIpPair = Pair.with(dst_ip, dst_ip_int - 1);
                     dstNode = dstIpPair.getValue1();
-                    //portList.add(Triplet.with(sourceIpPair.getValue0(), sourceIpPair.getValue1(), outPortInt));
                 }
 
-                //portList.add(Triplet.with(sourceIpPair.getValue1(), dstIpPair.getValue1(), outPortInt));
                 portList.add(Quintet.with(sourceIpPair.getValue0(), sourceIpPair.getValue1(),
                         dstIpPair.getValue0(), dstIpPair.getValue1(), outPortInt));
                 addEdge(graph, sourceIpPair.getValue1(), dstIpPair.getValue1());
 
             }
+            /*
+            Because the shortestDist algorithm needs an int source and dest, we iterate through portList until we find
+            the processing name for each host, this way the user doesn't need to adjust the source/destination for the hosts
+             */
             int host_158 = 0;
             int host_130 = 0;
             int host_121 = 0;
@@ -145,7 +174,6 @@ public class shortestPath {
                     host_121 = device.getValue1();
                 }
             }
-            System.out.println("routing for");
             // dynamically linked hosts through a shortest path depending on the topology
             // Array list returned by shortestDist is collected and added to routingTable
             ArrayList<Triplet<Integer, String, Integer>> routingTable = new ArrayList<Triplet<Integer, String, Integer>>();
@@ -201,8 +229,11 @@ public class shortestPath {
         int[] dist = new int[vertices];
 
         int outPort = 0;
+        // routingTuples is the list that is returned at the end of function call
         ArrayList<Triplet<Integer, String, Integer>> routingTuples = new ArrayList<Triplet<Integer, String, Integer>>();
 
+        // The sources/destinations will always be a string representing an IP address, so we are creating variables
+        // To hold said string
         String sourceAsString = "";
         for (Quintet<String, Integer, String, Integer, Integer> possibleSource : allPorts) {
             if (possibleSource.getValue1() == source) {
@@ -235,6 +266,15 @@ public class shortestPath {
         //System.out.println("Shortest path length is: " + dist[dest]);
 
         // Print path
+        /*
+        The canonical topology doesn't have a zero switch. So here we are converting the processing names into canonical
+        names
+        The path variable is a list holding each vertex in the shortest path. The source node is stored at path.size(),
+        and the dest node is stored at path.get(0)
+
+        We can also make another assumption, the port number for host -> switch is always -1, so if the port number for a
+        given edge is -1, we know the source is a host
+         */
         for (Quintet<String, Integer, String, Integer, Integer> port : allPorts) {
             if (port.getValue1() == (path.get(path.size() - 1)) &&
                     port.getValue3() == (path.get(path.size() - 2))) {
@@ -256,8 +296,7 @@ public class shortestPath {
                 }
             }
         }
-
-
+        // Print out the shortest path calculated
         for (int i = path.size() - 1; i >= 0; i--) {
             System.out.print((path.get(i) + 1) + " ");
         }
