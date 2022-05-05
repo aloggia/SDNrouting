@@ -16,7 +16,7 @@ if __name__ == '__main__':
     # path to the pwd as a variable and append filenames to it
     working_directory = os.getcwd()
     # Dependancies for the java program
-    # Might need to change the "\" to "/" if running on linux
+    # TODO: if program doesnt work, try changing the "\" to "/" if running on linux
     java_tuples = working_directory + "\javatuples-1.2.jar"
     java_json = working_directory + "\json-simple-1.1.jar"
     # store the classpath as a var for easy re-use
