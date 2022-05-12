@@ -7,11 +7,11 @@ import os
 
 if __name__ == '__main__':
     connection_dest = str(sys.argv[1])
-    website_endpoint = str(sys.argv[2])
+    # website_endpoint = str(sys.argv[2])
     # I've only gotten the code to work when saving the json's as files, then reading to/from the files
-    file_name = website_endpoint + ".json"
-    get_website = "http://" + connection_dest + ":2222/get_topology/" + website_endpoint
-    post_website = "http://" + connection_dest + ":2222/set_tables/" + website_endpoint
+    file_name = "topology.json"
+    get_website = "http://" + connection_dest + ":2222/get_topology"
+    post_website = "http://" + connection_dest + ":2222/set_tables"
     # java compilation I've found requires the entire file path for the classpath, so we can store the
     # path to the pwd as a variable and append filenames to it
     working_directory = os.getcwd()
